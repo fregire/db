@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Game.Domain;
+using MongoDB.Driver;
 using Tests;
 
 namespace ConsoleApp
@@ -10,11 +11,13 @@ namespace ConsoleApp
         private readonly IUserRepository userRepo;
         private readonly IGameRepository gameRepo;
         private readonly Random random = new Random();
+        private readonly IMongoDatabase db;
 
         private Program(string[] args)
         {
-            userRepo = new MongoUserRepository(TestMongoDatabase.Create());
-            gameRepo = new InMemoryGameRepository();
+            db = TestMongoDatabase.Create();
+            userRepo = new MongoUserRepository(db);
+            gameRepo = new MongoGameRepository(db);
         }
 
         public static void Main(string[] args)

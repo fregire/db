@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -29,19 +30,37 @@ namespace Game.Domain
                 .FirstOrDefault();
         }
 
+        private UserEntity FindUserByLogin(string login)
+        {
+            using (var cursor = userCollection.Find(user => user.Login == login).ToCursor())
+            {
+                while (cursor.MoveNext())
+                {
+                    foreach (var doc in cursor.Current)
+                        return doc;
+                }
+            }
+
+            return null;
+        }
         public UserEntity GetOrCreateByLogin(string login)
         {
-            var user = userCollection
-                .Find(user => user.Login == login)
-                .FirstOrDefault();
+            var user = FindUserByLogin(login);
 
             if (user != null)
                 return user;
 
-            user = new UserEntity(Guid.NewGuid(), login, null, null, 0, Guid.Empty);
-            userCollection.InsertOne(user);
+            try
+            {
+                user = new UserEntity(Guid.NewGuid(), login, null, null, 0, Guid.Empty);
+                userCollection.InsertOne(user);
 
-            return user;
+                return user;
+            }
+            catch (MongoWriteException e)
+            {
+                return FindUserByLogin(login);
+            }
         }
 
         public void Update(UserEntity user)
