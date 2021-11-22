@@ -8,24 +8,29 @@ namespace Game.Domain
     public class MongoGameRepository : IGameRepository
     {
         public const string CollectionName = "games";
+        private readonly IMongoCollection<GameEntity> gameCollection;
 
         public MongoGameRepository(IMongoDatabase db)
         {
+            gameCollection = db.GetCollection<GameEntity>(CollectionName);
         }
 
         public GameEntity Insert(GameEntity game)
         {
-            throw new NotImplementedException();
+            gameCollection.InsertOne(game);
+            return game;
         }
 
         public GameEntity FindById(Guid gameId)
         {
-            throw new NotImplementedException();
+            return gameCollection
+                .Find(game => game.Id == gameId)
+                .FirstOrDefault();
         }
 
         public void Update(GameEntity game)
         {
-            throw new NotImplementedException();
+            gameCollection.ReplaceOne(foundGame => foundGame.Id == game.Id, game);
         }
 
         // Возвращает не более чем limit игр со статусом GameStatus.WaitingToStart
